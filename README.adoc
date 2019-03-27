@@ -2,10 +2,10 @@
 
 *Pre-requisites*:
 
-- ~/.docker/config.json or ~/.dockercfg
-- For pyscanner.py: Access to Red Hat registry to pull openSCAP image
+- Logged in to registry and ~/.docker/config.json or ~/.dockercfg exists.
+- For pyscanner.py: Access to Red Hat registry to pull openSCAP image.
 - For pyscanner_cli.py: Access to Red Hat CVE OVAL definition(http://www.redhat.com/security/data/oval/com.redhat.rhsa-all.xml).
-
+- running Docker daemon.
 
 
 *This scanner use-case:*

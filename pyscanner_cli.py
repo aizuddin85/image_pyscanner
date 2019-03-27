@@ -153,7 +153,12 @@ if __name__ == "__main__":
                 result_directory = "{}/{}".format(results_parent_dir, options.scan_name)
                 if not os.path.isdir(results_parent_dir):
                     make_dir(results_parent_dir)
-                make_dir(result_directory)
+                elif os.path.isdir(result_directory):
+                    import shutil
+                    shutil.rmtree(result_directory)
+                    make_dir(result_directory)
+                else:
+                    make_dir(result_directory)
                 try:
                     logging.info("Starting to run the scanner against {} overlay mount.Please be patient..."
                                  .format(image_name))
@@ -175,7 +180,7 @@ if __name__ == "__main__":
                     # We have finished let`s clean up the mount point.
                     unmount_dir(options.image_mount)
                     logging.info("Scan finished, result available here: {}".format(result_directory))
-                except docker.errors.ContainerError or docker.errors.ImageNotFound or docker.errors.APIError as err:
+                except os.error as err:
                     raise err
             except RuntimeError as err:
                 raise err

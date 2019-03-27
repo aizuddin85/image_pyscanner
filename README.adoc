@@ -16,7 +16,7 @@ a.  Containerized openSCAP (`pyscanner.py`)
 b. RPM based openSCAP (`pyscanner_cli.py`)
 
 
-*pyscanner.py*
+*pyscanner.py(Containerized openSCAP)*
 [source, bash]
 
 pyscanner.py --image-url docker-registry-default.apps.example.com/parks-dev/mlbparks --image-tag 0.0.0 --image-mount /mnt/imagetest --scan-name myrhel7
@@ -45,7 +45,7 @@ Sample usage: --image-url=docker-registry-default.example.com/repo/myimage --ima
 
 
 
-*pyscanner_cli.py*
+*pyscanner_cli.py(CLI openSCAP)*
 
 Example with webserver hosting the results. ( Setting up webserver it out from this README scope.)
 

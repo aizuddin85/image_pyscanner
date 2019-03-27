@@ -1,4 +1,4 @@
-= Container Image openSCAP Scanner
+= Container Image openSCAP Scanner (Non-OpenShift Hosted)
 
 *Pre-requisites*:
 

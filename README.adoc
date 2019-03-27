@@ -1,10 +1,17 @@
 = Container Image openSCAP Scanner (Non-OpenShift Hosted)
 
+NOTE: This is a non-official be-spoke solution.
+
 *Pre-requisites*:
 
 - Logged in to registry and ~/.docker/config.json or ~/.dockercfg exists.
-- For pyscanner.py: Access to Red Hat registry to pull openSCAP image.
-- For pyscanner_cli.py: Access to Red Hat CVE OVAL definition(http://www.redhat.com/security/data/oval/com.redhat.rhsa-all.xml).
+- For pyscanner.py:
+  * Access to Red Hat registry to pull openSCAP image.
+- For pyscanner_cli.py:
+  * Access to Red Hat CVE OVAL definition(http://www.redhat.com/security/data/oval/com.redhat.rhsa-all.xml).
+  * openscap installed
+  * openscap-scanner installed
+  * scap-security-guide installed
 - running Docker daemon.
 
 
@@ -14,7 +21,7 @@
 2. Options to choose between:
 a.  Containerized openSCAP (`pyscanner.py`)
 b. RPM based openSCAP (`pyscanner_cli.py`)
-
+3. Defined own custom directory to host result.
 
 *pyscanner.py(Containerized openSCAP)*
 [source, bash]
@@ -39,7 +46,7 @@ optional arguments:
   --scan-name SCAN_NAME
                         This scan runtime name.
 
-%s
+
 Sample usage: --image-url=docker-registry-default.example.com/repo/myimage --image-tag=2.3.5 --image-mount=/mnt/scaprun-repo-myimage-2.3.5 --result-dir=/openscap/results --scan-name=repo-myimage-latest-1
 ----
 
@@ -47,7 +54,7 @@ Sample usage: --image-url=docker-registry-default.example.com/repo/myimage --ima
 
 *pyscanner_cli.py(CLI openSCAP)*
 
-Example with webserver hosting the results. ( Setting up webserver it out from this README scope.)
+Example with webserver hosting the results. ( Setting up webserver is out from this README scope.)
 
 [source, bash]
 ----

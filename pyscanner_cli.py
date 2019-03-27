@@ -21,7 +21,7 @@ parser = argparse.ArgumentParser(description='A wrapper to mount overlay(only th
 
 parser.add_argument('--image-url', action='store', dest='image_url', help='The location of the image in upstream repo',
                     required=True)
-parser.add_argument('--image-tag', action='store', dest='image_tag', help='The tag for the image to be scanned.',
+parser.add_argument('--image-tag', action='store', dest='image_tag', help='The tag for the image',
                     required=True)
 parser.add_argument('--result-dir', action='store', dest='result_dir', help='The parent directory for results.',
                     required=True)
@@ -47,9 +47,10 @@ console.setLevel(logging.INFO)
 formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
 console.setFormatter(formatter)
 logging.getLogger('').addHandler(console)
-# Defined which openscap image we going to use
-openscap_image = "registry.access.redhat.com/rhel7/openscap:latest"
+# Defined where we should fetch the CVE OVAL
+redhat_upstream_cve_oval = 'http://www.redhat.com/security/data/oval/com.redhat.rhsa-all.xml'
 results_parent_dir = options.result_dir
+oval_definition_file_dir = '/tmp'
 image_pull_timer_secs = 300.0
 image_name = '{}:{}'.format(options.image_url, options.image_tag)
 # Initiate ctypes for mount and unmount image.
@@ -93,6 +94,7 @@ def timeout(max_timeout):
     # Defined a timeout decorator
     def timeout_decorator(item):
         """Wrap the original function."""
+
         @functools.wraps(item)
         def func_wrapper(*args, **kwargs):
             """Closure for function."""
@@ -100,7 +102,9 @@ def timeout(max_timeout):
             async_result = pool.apply_async(item, args, kwargs)
             # raises a TimeoutError if execution exceeds max_timeout
             return async_result.get(max_timeout)
+
         return func_wrapper
+
     return timeout_decorator
 
 
@@ -113,7 +117,6 @@ def pull_image_registry(image_url, image_tag=None):
         raise err
 
 
-# Read image info and return overlay layer.
 def get_image_info(img_name):
     try:
         image_response = docker_apiclient.inspect_image(img_name)
@@ -146,29 +149,30 @@ if __name__ == "__main__":
                 logging.debug("Attemping to mount image layer... ")
                 # Mount image layer as overlay mount.
                 mount_img_layer('overlay', options.image_mount, 'overlay', options=mount_opts)
-                logging.info("Overlay image mounted on {}".format(options.image_mount,))
-                # Instantiate docker CLI.
-                docker_cliclient = docker.from_env()
-                # Build command to scan.
-                docker_cmd_args = "oscapd-evaluate scan --no-standard-compliance " \
-                                  "--targets chroot:///scanin --output /scanout -j1"
+                logging.info("Overlay image mounted on {}".format(options.image_mount, ))
                 result_directory = "{}/{}".format(results_parent_dir, options.scan_name)
                 if not os.path.isdir(results_parent_dir):
                     make_dir(results_parent_dir)
                     make_dir(result_directory)
-                # Contsruct volume dict to be mounted on the openscap container.
-                docker_vol_dict = {'/etc/localtime': {'bind': '/etc/locatime', 'mode': 'ro'},
-                                   options.image_mount: {'bind': '/scanin', 'mode': 'rw'},
-                                   result_directory: {'bind': '/scanout', 'mode': 'rw,Z'},
-                                   '/etc/oscapd': {'bind': '/etc/oscapd', 'mode': 'ro'}}
                 try:
-                    logging.info("Starting to run the scanner against {} overlay mount...".format(image_name))
-                    # Now we run a openscap container and removed it when finished.
-                    docker_cliclient.containers.run(openscap_image, tty=True, remove=True, command=docker_cmd_args,
-                                                    volumes=docker_vol_dict)
+                    logging.info("Starting to run the scanner against {} overlay mount.Please be patient..."
+                                 .format(image_name))
+                    # Fetch latest CVE OVAL, ensure we are not exposed to any zero-day attack for new vulnerabilities.
+                    oval_definition = '{0}/{1}-{2}.xml'.format(oval_definition_file_dir, 'com.redhat.rhsa-all',
+                                                               options.scan_name)
+                    if os.path.isfile(oval_definition):
+                        logging.info("Old definition file with same name exists, deleting...")
+                        os.remove(oval_definition)
+                    os.system('wget -O {} {}'.format(oval_definition, redhat_upstream_cve_oval))
+                    # Construct CLI to be executed on the system for scanning.
+                    oscapd_cmd_args = "oscap-chroot {0} oval eval --results  " \
+                                      "{1}/rhsa-results-oval.xml --report {1}/oval-report.html " \
+                                      "{2}".format(options.image_mount, result_directory, oval_definition)
+                    logging.debug("Executing command: {}".format(oscapd_cmd_args))
+                    os.system(oscapd_cmd_args)
                     logging.info("Finished scanning the overlay mount")
                     logging.info("Umounting temporary overlay mount {}".format(options.image_mount))
-                    # Unmount overlay image now, we have finished.
+                    # We have finished let`s clean up the mount point.
                     unmount_dir(options.image_mount)
                     logging.info("Scan finished, result available here: {}".format(result_directory))
                 except docker.errors.ContainerError or docker.errors.ImageNotFound or docker.errors.APIError as err:
@@ -180,3 +184,4 @@ if __name__ == "__main__":
             sys.exit(1)
     except RuntimeError as err:
         raise err
+

@@ -1,10 +1,10 @@
-= Container Image openSCAP Scanner
+= Container Image openSCAP Scanner (Non-OpenShift Hosted)
 
 *Pre-requisites*:
 
 - ~/.docker/config.json or ~/.dockercfg
 - For pyscanner.py: Access to Red Hat registry to pull openSCAP image
-- For pyscanner_cli.py: Access to Red Hat CVE OVAL definition ( http://www.redhat.com/security/data/oval/com.redhat.rhsa-all.xml).
+- For pyscanner_cli.py: Access to Red Hat CVE OVAL definition(http://www.redhat.com/security/data/oval/com.redhat.rhsa-all.xml).
 
 
 
@@ -51,7 +51,7 @@ Example with webserver hosting the results. ( Setting up webserver it out from t
 
 [source, bash]
 ----
-[root@scanner ~]# ./pyscanner_cli.py --image-url docker-registry-default.example.com/parks-dev/mlbparks --image-tag 0.0.0 --image-mount=/mnt/scaprun-myimage-0.0.0 --result-dir=/var/www/html/scanner_results --scan-name=parks-dev-mlbpark-0.0.0
+[root@scanner ~]# ./pyscanner_cli.py --image-url docker-registry-default.example.com/rhel7/rhel --image-tag 7.5 --image-mount=/mnt/scaprun-rhel7-rhel-0.0.0 --result-dir=/var/www/html/scanner_results --scan-name=myrhel7
 ----
 
-:title-logo-image: images/example1.png
+image::images/example1.png[]

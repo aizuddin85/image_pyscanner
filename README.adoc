@@ -54,4 +54,4 @@ Example with webserver hosting the results. ( Setting up webserver it out from t
 [root@scanner ~]# ./pyscanner_cli.py --image-url docker-registry-default.example.com/parks-dev/mlbparks --image-tag 0.0.0 --image-mount=/mnt/scaprun-myimage-0.0.0 --result-dir=/var/www/html/scanner_results --scan-name=parks-dev-mlbpark-0.0.0
 ----
 
-:title-logo-image: images/example1.png
+image::images/example1.png[]

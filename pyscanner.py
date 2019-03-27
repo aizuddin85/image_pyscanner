@@ -34,11 +34,14 @@ parser.add_argument('--scan-name', action='store', dest='scan_name', help='This 
 options = parser.parse_args()
 
 # Set up the date & logger
+logging_directory = '/var/log/pyscanner'
+if not os.path.isdir(logging_directory):
+    os.mkdir(logging_directory)
 todays_date = str(datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d--%H_%M'))
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s %(levelname)-8s %(message)s',
                     datefmt='%m-%d %H:%M',
-                    filename='/var/log/pyscanner_%s.log' % todays_date,
+                    filename='{}/pyscanner_{}.log'.format(logging_directory, todays_date),
                     filemode='w')
 console = logging.StreamHandler()
 console.setLevel(logging.INFO)
@@ -113,9 +116,7 @@ def timeout(max_timeout):
             pool = multiprocessing.pool.ThreadPool(processes=1)
             async_result = pool.apply_async(item, args, kwargs)
             return async_result.get(max_timeout)
-
         return func_wrapper
-
     return timeout_decorator
 
 
@@ -131,10 +132,8 @@ def pull_image_registry(image_url, image_tag=None):
 
 # Read image info and return overlay layer informations.
 def get_image_info(img_name):
-    # noinspection PyShadowingNames
     try:
         image_response = docker_api_client.inspect_image(img_name)
-        # noinspection PyShadowingNames
         image_info = image_response['GraphDriver']['Data']
         return image_info
     except docker.errors.APIError as err:
@@ -142,7 +141,7 @@ def get_image_info(img_name):
 
 @timeout(scanning_timer_secs)
 def run_image_scan(openscap_image_name, volume_bind_dict, **kwargs):
-    # noinspection PyShadowingNames
+
     try:
         # Instantiate docker CLI. Some method like containers.run is not available from APIClient class.
         docker_cli_client = docker.from_env()
@@ -189,7 +188,7 @@ if __name__ == "__main__":
                 # Mount image layer as overlay mount.
                 logging.info("Attemping to mount image layer for {}...".format(image_name))
                 mount_img_layer('overlay', options.image_mount, 'overlay', options=mount_opts)
-                logging.info("Overlay image mounted on {}".format(options.image_mount, ))
+                logging.info("Overlay image mounted on {}".format(options.image_mount))
 
                 # Build up command to be passed to container.
                 docker_cmd_args = "oscapd-evaluate scan --no-standard-compliance " \
